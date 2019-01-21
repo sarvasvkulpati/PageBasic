@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="webcam 2.css" />
+  </head>
+
+  <body>
+    <button id="myBtn">Open Modal</button>
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="my_camera"></div>
+        <!-- First, include the Webcam.js JavaScript Library -->
+        <script type="text/javascript" src="webcam.min.js"></script>
+
+        <!-- Configure a few settings and attach camera -->
+        <script language="JavaScript">
+          Webcam.set({
+            width: 640,
+            height: 480,
+            image_format: "jpeg",
+            jpeg_quality: 90
+          });
+          Webcam.attach("#my_camera");
+        </script>
+
+        <!-- A button for taking snaps -->
+        <form>
+          <input
+            id="snapshot"
+            type="button"
+            value="Take Snapshot"
+            onClick="take_snapshot()"
+          />
+        </form>
+      </div>
+    </div>
+    <script>
+      var modal = document.getElementById("myModal");
+
+      // Get the button that opens the modal
+      var btn = document.getElementById("myBtn");
+
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+
+      // When the user clicks on the button, open the modal
+      btn.onclick = function() {
+        modal.style.display = "block";
+      };
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+        modal.style.display = "none";
+      };
+
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+    </script>
+
+    <!-- Code to handle taking the snapshot and displaying it locally -->
+    <script language="JavaScript">
+      function take_snapshot() {
+        // take snapshot and get image data
+        Webcam.snap(function(data_uri) {
+          // display results in page
+          $.ajax({
+            url: "http://10.100.44.239:5000/convertImage",
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "application/json"
+            },
+            method: "POST",
+            dataType: "html",
+            contentType: "text/plain",
+            data: data_uri,
+            success: function(data) {
+              console.log("succes: " + data);
+              var opened = window.open("");
+              opened.document.write(data);
+            }
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

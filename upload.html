@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>PageBasic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
+    crossorigin="anonymous" />
+  <link rel="stylesheet" type="text/css" media="screen" href="upload.css" />
+  <link rel="stylesheet" href="webcam 2.css" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/typeit@6/dist/typeit.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="webcam.min.js"></script>
+  <script src="webcam.js"></script>
+  <script src="upload.js"></script>
+</head>
+
+<body>
+  <div id="popup">
+    <p id="popup-title">Please select method of file upload.</p>
+    <div id="popup-container">
+      <div id="upload">
+        <img style="height: 150px;" src="assets/filesystem.png" />
+        <p>Select File</p>
+      </div>
+      <div id="divider"></div>
+      <div id="webcam">
+        <img style="height: 150px;" src="assets/images.png" />
+        <p>Take Picture</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="my_camera"></div>
+
+      <script type="text/javascript" src="webcam.min.js"></script>
+
+      <!-- Configure a few settings and attach camera -->
+      <script language="JavaScript">
+        Webcam.set({
+          width: 640,
+          height: 480,
+          image_format: "jpeg",
+          jpeg_quality: 100,
+          dest_width: 640,
+          dest_height: 480
+        });
+        Webcam.attach("#my_camera");
+      </script>
+
+      <!-- A button for taking snaps -->
+      <form>
+        <input id="snapshot" type="button" value="Take Snapshot" onClick="take_snapshot()" />
+      </form>
+    </div>
+  </div>
+
+  <div id="header">
+    <div id="header-container">
+      <input type="text" id="page-title" placeholder="Untitled Page" />
+      <label for="Theme" style="display: flex; flex-direction: row;justify-content: space-evenly;">
+        <p style="margin: auto 0;">Theme</p>
+        <div id="theme-container">
+          <select id="theme-select">
+            <option value="default">Default</option>
+            <option value="airbnb">AirBnB</option>
+            <option value="google">Google</option>
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram</option>
+          </select>
+        </div>
+      </label>
+      <div id="buttons">
+        <button id="deploy-button" style="margin: auto 20px;">
+          Deploy <i class="fas fa-cloud-upload-alt"></i>
+        </button>
+        <button id="download-button" style="background-color: #feca57;margin: auto 20px;">
+          Download <i class="fas fa-download"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <div id="editor-header" style="display: flex;flex-direction: column;background-color: #c8d6e5;display: none;">
+    <p style="font-family: monospace;font-weight: bold;font-size: 17px;margin: auto 15px;">index.html</p>
+  </div>
+  <div id="editor"></div>
+
+  <button id="convert-btn-cam" style="background-color: #54a0ff;">
+    Convert to Code <i class="fas fa-code"></i>
+  </button>
+
+  <button id="convert-btn-file" style="background-color: #54a0ff;">
+    Convert to Code <i class="fas fa-code"></i>
+  </button>
+
+  <div id="loader-container">
+    <div class="lds-grid">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p id="loader-text" style="text-align: center;padding-top: 28%;font-weight: 600;color: white;font-size: 20px;"></p>
+  </div>
+
+  <!-- Code to handle taking the snapshot and displaying it locally -->
+  <script language="javascript">
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("webcam");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    var popup = document.getElementById("popup");
+
+    var canvas = document.getElementById("canvas");
+
+    var convertBtnFile = document.getElementById("convert-btn-file");
+    var convertBtnCam = document.getElementById("convert-btn-cam");
+
+    const editorHeader = document.getElementById('editor-header');
+
+    var loaderContainer = document.getElementById("loader-container");
+
+    const themeSelector = document.getElementById('theme-select');
+
+    var editorComponent = document.getElementById("editor");
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/xcode");
+    editor.session.setMode("ace/mode/html");
+
+    // When the user clicks on the button, open the modal
+    btn.onclick = function () {
+      modal.style.display = "block";
+      popup.style.display = "none";
+    };
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+      modal.style.display = "none";
+      popup.style.display = "block";
+    };
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    // function resizeImage() {
+    //   var newDataURI = 
+    // }
+
+    function imageToDataUri(img, width, height) {
+
+      // create an off-screen canvas
+      var canvas = document.createElement('canvas'),
+        ctx = canvas.getContext('2d');
+
+      // set its dimension to target size
+      canvas.width = width;
+      canvas.height = height;
+
+      // draw source image into the off-screen canvas:
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // encode image to data-uri with base64 version of compressed image
+      return canvas.toDataURL();
+    }
+
+    function drawDataURIOnCanvas(strDataURI, canvas) {
+      "use strict";
+      canvas.style.display = "block";
+      var img = new Image();
+      img.addEventListener("load", function () {
+        canvas.getContext("2d").drawImage(img, 1, 1);
+      });
+      img.setAttribute("src", strDataURI);
+      // var ctx = canvas.getContext("2d")
+      // ctx.drawImage(img, img.width / 2, img.height / 2)
+    }
+
+    function take_snapshot() {
+      // take snapshot and get image data
+      Webcam.snap(function (data_uri) {
+        popup.style.display = "none";
+        modal.style.display = "none";
+
+        drawDataURIOnCanvas(data_uri, canvas);
+        var data_uri = canvas.toDataURL();
+        console.log(data_uri);
+        // canvas.getContext('2d').drawImage(data_uri, 0, 0)
+
+        convertBtnCam.style.display = "block";
+
+        convertBtnCam.addEventListener("click", () => {
+          loaderContainer.style.display = "block";
+          new TypeIt("#loader-text", {
+            speed: 50,
+            startDelay: 0
+          })
+            .type("Initialising Neural Network...")
+            .pause(250)
+            .delete()
+            .pause(250)
+            .type("Optimizing components...")
+            .delete()
+            .pause(100)
+            .type("Generating Markup...")
+            .go();
+
+          var theme = themeSelector.options[themeSelector.selectedIndex].value;
+          var obj = {
+            "style": theme,
+            "imageData": data_uri
+          };
+          $.ajax({
+            url: "http://10.100.92.32:5000/convertSketch",
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "application/json"
+            },
+            method: "POST",
+            dataType: "html",
+            contentType: "application/json",
+            data: JSON.stringify(obj),
+            success: function (obj) {
+              loaderContainer.style.display = "none";
+              console.log("succes: " + obj);
+              canvas.style.width = "49%";
+              canvas.style.top = "15%";
+              canvas.style.margin = "10px 0";
+              convertBtnCam.style.display = "none";
+              editorComponent.style.display = "block";
+              editor.setValue(obj);
+              editorHeader.style.display = 'block'
+              var opened = window.open("");
+              opened.document.write(obj);
+            }
+          });
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="webcam.css" />
+  </head>
+
+  <body>
+    <div id="outer_div">
+      <div id="my_camera"></div>
+
+      <!-- First, include the Webcam.js JavaScript Library -->
+      <script
+        type="text/javascript"
+        src="webcamjs-master/webcam.min.js"
+      ></script>
+
+      <!-- Configure a few settings and attach camera -->
+      <script language="JavaScript">
+        Webcam.set({
+          width: 640,
+          height: 480,
+          image_format: "jpeg",
+          jpeg_quality: 90
+        });
+        Webcam.attach("#my_camera");
+      </script>
+
+      <!-- A button for taking snaps -->
+      <form>
+        <input
+          id="snapshot"
+          type="button"
+          value="Take Snapshot"
+          onClick="take_snapshot()"
+        />
+      </form>
+    </div>
+
+    <!-- Code to handle taking the snapshot and displaying it locally -->
+    <script language="javascript">
+      function take_snapshot() {
+        // take snapshot and get image data
+        Webcam.snap(function(data_uri) {
+          // display results in page
+          $.ajax({
+            url: "http://10.100.44.239:5000/convertImage",
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "application/json"
+            },
+            method: "POST",
+            dataType: "html",
+            contentType: "text/plain",
+            data: data_uri,
+            success: function(data) {
+              console.log("succes: " + data);
+              var opened = window.open("");
+              opened.document.write(data);
+            }
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

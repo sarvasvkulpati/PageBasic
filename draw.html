@@ -1,0 +1,198 @@
+<html>
+
+<head>
+  <title>PageBasic</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="draw.css" />
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
+    crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/typeit@6/dist/typeit.min.js"></script>
+  <script type="text/javascript" src="draw.js"></script>
+</head>
+
+<body onload="init()">
+  <div id="header">
+    <div id="header-container">
+      <input type="text" id="page-title" placeholder="Untitled Page" />
+      <label for="Theme" style="display: flex; flex-direction: row;justify-content: space-evenly;">
+        <p style="margin: auto 0;">Theme</p>
+        <div id="theme-container">
+          <select id="theme-select">
+            <option value="default">Default</option>
+            <option value="airbnb">AirBnB</option>
+            <option value="google">Google</option>
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram</option>
+          </select>
+        </div>
+      </label>
+      <div id="buttons">
+        <button id="deploy-button">
+          Deploy <i class="fas fa-cloud-upload-alt"></i>
+        </button>
+        <button id="download-button" style="background-color: #feca57;">
+          Download <i class="fas fa-download"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="draw-canvas">
+    <canvas id="can" width="900" height="500" style="position:absolute;top:10%;left:0;right:0;bottom:0;margin:auto;box-shadow: 1px 1px 10px rgba(0,0,0,0.15);border-radius: 10px;"></canvas>
+
+    <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;" />
+
+    <!-- <input
+        type="button"
+        value="Generate"
+        id="generate"
+        size="30"
+        style="position:absolute;top:55%;left:10%;"
+      /> -->
+
+    <!-- <input
+        type="button"
+        value="Clear"
+        id="clr"
+        size="23"
+        style="position:absolute;top:55%;left:15%;"
+      /> -->
+  </div>
+
+  <button id="convert-btn" style="background-color: #54a0ff;">
+    Convert to Code <i class="fas fa-code"></i>
+  </button>
+
+  <div id="editor-header" style="display: flex;flex-direction: column;background-color: #c8d6e5;display: none;">
+    <p style="font-family: monospace;font-weight: bold;font-size: 17px;margin: auto 15px;">index.html</p>
+  </div>
+  <div id="editor"></div>
+
+  <div id="sidebar">
+
+    <!-- <div id="specs">
+      <p id="cont-content">Background color</p>
+      <select id="bgcolor-select">
+        <option value="blue">Blue</option>
+        <option value="red">Red</option>
+        <option value="white">White</option>
+        <option value="yellow">Yellow</option>
+        <option value="black">Black</option>
+        <option value="green">Green</option>
+      </select>
+    </div>
+
+    <div id="specs">
+      <p id="cont-content">Button color</p>
+      <select id="bgcolor-select">
+        <option value="white">White</option>
+        <option value="blue">Blue</option>
+        <option value="red">Red</option>
+        <option value="yellow">Yellow</option>
+        <option value="black">Black</option>
+        <option value="green">Green</option>
+      </select>
+    </div>
+
+    <div id="specs">
+      <p id="cont-content">Text color</p>
+      <select id="bgcolor-select">
+        <option value="black">Black</option>
+        <option value="blue">Blue</option>
+        <option value="red">Red</option>
+        <option value="white">White</option>
+        <option value="yellow">Yellow</option>
+        <option value="green">Green</option>
+      </select>
+    </div> -->
+  </div>
+
+  <div id="loader-container">
+    <div class="lds-grid">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p id="loader-text" style="text-align: center;padding-top: 28%;font-weight: 600;color: white;font-size: 20px;"></p>
+  </div>
+
+  <script>
+    new TypeIt("#loader-text", {
+      speed: 50,
+      startDelay: 0
+    })
+      .type("Initialising Neural Network...")
+      .pause(250)
+      .delete()
+      .pause(250)
+      .type("Optimizing components...")
+      .delete()
+      .pause(100)
+      .type("Generating Markup...")
+      .go();
+
+    var convertBtn = document.getElementById("convert-btn");
+    var editorComponent = document.getElementById("editor");
+    var loaderContainer = document.getElementById("loader-container");
+    var themeSelector = document.getElementById("theme-select");
+    var editorHeader = document.getElementById('editor-header');
+
+    var editor = ace.edit("editor");
+    var canvas = document.getElementById("can");
+    editor.setTheme("ace/theme/xcode");
+    editor.session.setMode("ace/mode/html");
+
+    function save2() {
+      loaderContainer.style.display = "block";
+      var data_uri = canvas.toDataURL();
+      var theme = themeSelector.options[themeSelector.selectedIndex].value;
+      console.log('theme: ', theme)
+      console.log(data_uri);
+      var obj = {
+        "style": theme,
+        "imageData": data_uri
+      };
+      $.ajax({
+        url: "http://10.100.92.32:5000/convertSketch",
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        },
+        method: "POST",
+        dataType: "html",
+        contentType: "application/json",
+        data: JSON.stringify(obj),
+        success: function (obj) {
+          loaderContainer.style.display = "none";
+          console.log("succes: " + obj);
+          canvas.style.width = "49%";
+          canvas.style.top = "15%";
+          canvas.style.margin = "10px 0";
+          convertBtn.style.display = "none";
+          editorComponent.style.display = "block";
+          editor.setValue(obj);
+          editorHeader.style.display = 'block'
+          var opened = window.open("");
+          opened.document.write(obj);
+        }
+      });
+    }
+
+    convertBtn.addEventListener("click", () => {
+      save2();
+    });
+  </script>
+</body>
+
+</html>
